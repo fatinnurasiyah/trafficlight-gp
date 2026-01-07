@@ -1,56 +1,99 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from gplearn.genetic import SymbolicRegressor
-from sklearn.model_selection import train_test_split
+import random
 from sklearn.metrics import mean_squared_error
 
 st.title("🚦 Traffic Light Optimization using Genetic Programming")
 
-# Upload dataset
+# ==============================
+# Genetic Programming Components
+# ==============================
+
+functions = ['+', '-', '*', '/']
+terminals = ['vehicle_count', 'average_speed',
+             'lane_occupancy', 'flow_rate', 'time_of_day']
+
+
+def safe_div(a, b):
+    return a / b if b != 0 else 1
+
+
+def generate_expression(depth=3):
+    if depth == 0 or random.random() < 0.3:
+        return random.choice(terminals)
+    return (
+        random.choice(functions),
+        generate_expression(depth - 1),
+        generate_expression(depth - 1)
+    )
+
+
+def evaluate(expr, row):
+    if isinstance(expr, str):
+        return row[expr]
+    op, left, right = expr
+    a = evaluate(left, row)
+    b = evaluate(right, row)
+    if op == '+': return a + b
+    if op == '-': return a - b
+    if op == '*': return a * b
+    if op == '/': return safe_div(a, b)
+
+
+def fitness(expr, X, y):
+    preds = []
+    for _, row in X.iterrows():
+        preds.append(evaluate(expr, row))
+    return mean_squared_error(y, preds)
+
+
+def crossover(e1, e2):
+    if not isinstance(e1, tuple) or not isinstance(e2, tuple):
+        return e1
+    return (e1[0], e1[1], e2[2])
+
+
+def mutate(expr):
+    if random.random() < 0.2:
+        return generate_expression()
+    return expr
+
+
+# ==============================
+# Streamlit UI
+# ==============================
+
 uploaded_file = st.file_uploader("Upload Traffic Dataset (CSV)", type="csv")
 
-if uploaded_file is not None:
+if uploaded_file:
     df = pd.read_csv(uploaded_file)
     st.write("📊 Dataset Preview", df.head())
 
-    # Features and target
-    X = df[['vehicle_count', 'average_speed', 'lane_occupancy',
-            'flow_rate', 'time_of_day']]
+    X = df[terminals]
     y = df['waiting_time']
 
-    # Train-test split
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
+    if st.button("Run Genetic Programming"):
+        population = [generate_expression() for _ in range(30)]
 
-    st.subheader("🧬 Training Genetic Programming Model")
+        for gen in range(10):
+            scores = [(fitness(expr, X, y), expr) for expr in population]
+            scores.sort(key=lambda x: x[0])
+            population = [expr for _, expr in scores[:10]]
 
-    gp = SymbolicRegressor(
-        population_size=500,
-        generations=20,
-        stopping_criteria=0.01,
-        p_crossover=0.7,
-        p_subtree_mutation=0.1,
-        p_hoist_mutation=0.05,
-        p_point_mutation=0.1,
-        max_depth=5,
-        function_set=['add', 'sub', 'mul', 'div'],
-        random_state=42,
-        verbose=1
-    )
+            while len(population) < 30:
+                p1, p2 = random.sample(population[:10], 2)
+                child = crossover(p1, p2)
+                child = mutate(child)
+                population.append(child)
 
-    if st.button("Train Model"):
-        gp.fit(X_train, y_train)
+        best_expr = population[0]
+        best_mse = fitness(best_expr, X, y)
 
-        # Prediction
-        y_pred = gp.predict(X_test)
-        mse = mean_squared_error(y_test, y_pred)
+        st.success("✅ Genetic Programming Completed")
 
-        st.success("✅ Model Training Completed")
+        st.subheader("📐 Best Mathematical Model")
+        st.code(best_expr)
 
-        st.subheader("📉 Model Performance")
-        st.write("Mean Squared Error (MSE):", mse)
-
-        st.subheader("📐 Generated Mathematical Model")
-        st.code(str(gp._program))
+        st.subheader("📉 Fitness (MSE)")
+        st.write(best_mse)

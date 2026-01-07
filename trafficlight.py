@@ -15,7 +15,7 @@ st.markdown("**Computational Evolution Case Study**")
 # =========================
 # Load Dataset
 # =========================
-st.subheader("📂 Traffic Dataset")
+st.subheader("Traffic Dataset")
 
 data = pd.read_csv("traffic_dataset.csv")
 
@@ -28,7 +28,7 @@ if data["time_of_day"].dtype == object:
         "night": 3
     })
 
-st.markdown("**Encoded Dataset Preview:**")
+st.markdown("**Encoded Dataset Preview: after preprocessing")
 st.dataframe(data.head())
 
 # =========================
@@ -41,7 +41,13 @@ feature_names = list(data.drop(columns=["waiting_time"]).columns)
 # =========================
 # Sidebar Parameters
 # =========================
-st.sidebar.header("⚙️ GP Parameters")
+status_col1, status_col2 = st.columns(2)
+
+with status_col1:
+    st.success("GP Optimization Completed")
+
+with status_col2:
+    st.info(f"Optimization Mode: **{optimization_mode}**")
 
 population_size = st.sidebar.slider("Population Size", 20, 100, 50)
 generations = st.sidebar.slider("Generations", 5, 100, 30)
@@ -94,7 +100,7 @@ def mutate(expr):
 # =========================
 # Run GP Optimization
 # =========================
-st.subheader("🧠 Genetic Programming Optimization Results")
+st.subheader("Genetic Programming Optimization Results")
 
 if st.button("Run Genetic Programming (GP)"):
 
@@ -133,11 +139,11 @@ if st.button("Run Genetic Programming (GP)"):
     coef, feature, bias = best_expr
     feature_name = feature_names[feature]
 
-    st.success("GP Optimization Completed")
+    st.success("Results shows")
 
     st.info(f"Optimization Mode: **{optimization_mode}**")
 
-    st.subheader("🏆 Best Interpretable Mathematical Model")
+    st.subheader("Best Interpretable Mathematical Model")
     st.code(f"waiting_time = {coef:.3f} × {feature_name} + {bias:.3f}")
 
     st.write(f"📉 **Best Fitness (MSE):** {best_fitness:.4f}")
@@ -156,7 +162,7 @@ if st.button("Run Genetic Programming (GP)"):
         )
 
     with col2:
-        st.markdown("**📊 Actual vs Predicted**")
+        st.markdown("** Actual vs Predicted**")
         st.scatter_chart(
             pd.DataFrame({
                 "Actual Waiting Time": y,
@@ -168,7 +174,7 @@ if st.button("Run Genetic Programming (GP)"):
     # =========================
     # Performance Analysis
     # =========================
-    st.subheader("📌 Performance Analysis")
+    st.subheader("Performance Analysis")
     st.markdown(
         "- **Convergence Rate:** Rapid improvement in early generations\n"
         "- **Accuracy:** GP predicts waiting time with acceptable error\n"

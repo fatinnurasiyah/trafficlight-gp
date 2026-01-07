@@ -17,8 +17,8 @@ st.markdown("**Computational Evolution Case Study**")
 data = pd.read_csv("traffic_dataset.csv")
 st.dataframe(data.head())
 
-X = data.drop(columns=["waiting_time"]).values
-y = data["waiting_time"].values
+X = data.drop(columns=["waiting_time"]).astype(float).values
+y = data["waiting_time"].astype(float).values
 
 # =========================
 # Sidebar Parameters

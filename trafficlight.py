@@ -17,6 +17,7 @@ st.markdown("**Computational Evolution Case Study**")
 data = pd.read_csv("traffic_dataset.csv")
 st.dataframe(data.head())
 
+# FORCE numeric
 X = data.drop(columns=["waiting_time"]).astype(float).values
 y = data["waiting_time"].astype(float).values
 
@@ -60,11 +61,13 @@ if st.button("▶ Run GP Optimization"):
         population = [random_expression(X.shape[1]) for _ in range(population_size)]
 
         for gen in range(generations):
-            scores = [(expr, fitness(expr, X, y)) for expr in population]
-            scores.sort(key=lambda x: x[1])
+            scored = [(expr, fitness(expr, X, y)) for expr in population]
+            scored.sort(key=lambda x: x[1])
 
-            population = [expr for expr, _ in scores[:population_size // 2]]
+            # selection (top 50%)
+            population = [expr for expr, _ in scored[:population_size // 2]]
 
+            # reproduction
             while len(population) < population_size:
                 parent = random.choice(population)
                 if random.random() < mutation_rate:
@@ -80,9 +83,10 @@ if st.button("▶ Run GP Optimization"):
     # =========================
     # Results
     # =========================
-    st.subheader("🏆 Best GP Expression")
     coef, feature, bias = best_expr
-    st.code(f"waiting_time = {coef:.3f} * X{feature} + {bias:.3f}")
+
+    st.subheader("🏆 Best GP Expression")
+    st.code(f"waiting_time = {coef:.3f} × feature[{feature}] + {bias:.3f}")
 
     st.subheader("📊 Fitness Score (MSE)")
     st.write(best_fitness)
@@ -100,7 +104,7 @@ if st.button("▶ Run GP Optimization"):
     st.subheader("📌 Conclusion")
     st.markdown(
         "- Genetic Programming successfully evolved a predictive expression\n"
-        "- Fitness improved over generations\n"
+        "- Numerical traffic features were used to minimize waiting time\n"
         "- The evolved model is interpretable and suitable for traffic optimization"
     )
 

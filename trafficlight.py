@@ -15,7 +15,7 @@ st.markdown("**Computational Evolution Case Study**")
 # =========================
 # Load Dataset
 # =========================
-st.subheader("📂 Traffic Dataset")
+st.subheader("Traffic Dataset")
 
 data = pd.read_csv("traffic_dataset.csv")
 st.dataframe(data.head())
@@ -31,7 +31,7 @@ if data["time_of_day"].dtype == object:
         "night": 3
     })
 
-st.markdown("**Encoded dataset preview:**")
+st.markdown("**Encoded Dataset Preview (After Preprocessing):**")
 st.dataframe(data.head())
 
 # =========================
@@ -45,19 +45,21 @@ feature_names = list(data.drop(columns=["waiting_time"]).columns)
 # =========================
 # Sidebar Parameters
 # =========================
-st.sidebar.header("⚙️ GP Parameters")
+st.sidebar.header("GP Parameters")
 
 population_size = st.sidebar.slider("Population Size", 20, 100, 50)
-generations = st.sidebar.slider("Generations", 5, 50, 20)
+generations = st.sidebar.slider("Generations", 5, 200, 20)
 mutation_rate = st.sidebar.slider("Mutation Rate", 0.01, 0.50, 0.10)
+coef_range = st.sidebar.slider("Coefficient Range (±)", 0.5, 5.0, 2.0)
+bias_range = st.sidebar.slider("Bias Range (±)", 1.0, 10.0, 5.0)
 
 # =========================
 # GP Helper Functions
 # =========================
 def random_expression(n_features):
     feature = random.randint(0, n_features - 1)
-    coef = random.uniform(-2, 2)
-    bias = random.uniform(-5, 5)
+    coef = random.uniform(-coef_range, coef_range)
+    bias = random.uniform(-bias_range, bias_range)
     return (coef, feature, bias)
 
 def predict(expr, X):
@@ -70,16 +72,16 @@ def fitness(expr, X, y):
 
 def mutate(expr):
     coef, feature, bias = expr
-    coef += random.uniform(-0.5, 0.5)
-    bias += random.uniform(-1, 1)
+    coef += random.uniform(-0.2 * coef_range, 0.2 * coef_range)
+    bias += random.uniform(-0.2 * bias_range, 0.2 * bias_range)
     return (coef, feature, bias)
 
 # =========================
 # Run GP Optimization
 # =========================
-st.subheader("🧠 Genetic Programming Model")
+st.subheader("Optimization Results of Genetic Programming ")
 
-if st.button("▶ Run GP Optimization"):
+if st.button("Run Genetic Programming (GP)"):
     start_time = time.time()
 
     with st.spinner("Running GP evolution..."):
@@ -109,12 +111,12 @@ if st.button("▶ Run GP Optimization"):
 
     exec_time = time.time() - start_time
 
-    st.success("✅ GP Optimization Completed")
+    st.success("Result Found")
 
     # =========================
     # Optimization Results
     # =========================
-    st.subheader("🏆 Optimization Results")
+    st.subheader("")
 
     coef, feature, bias = best_expr
     feature_name = feature_names[feature]
@@ -145,7 +147,7 @@ if st.button("▶ Run GP Optimization"):
     # =========================
     # Performance Analysis
     # =========================
-    st.subheader("📌 Performance Analysis")
+    st.subheader("Performance Analysis")
     st.markdown(
         "- **Convergence Rate:** Rapid improvement during early generations\n"
         "- **Accuracy:** GP-generated model predicts waiting time effectively\n"
@@ -159,7 +161,7 @@ if st.button("▶ Run GP Optimization"):
     # =========================
     # Conclusion
     # =========================
-    st.subheader("✅ Conclusion")
+    st.subheader("Conclusion")
     st.markdown(
         "This Streamlit-based Genetic Programming system demonstrates how evolutionary computation can automatically generate interpretable mathematical models for predicting traffic waiting time. "
         "Unlike Genetic Algorithms that optimize fixed parameters, GP evolves symbolic expressions, making the resulting model transparent and explainable."

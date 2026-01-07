@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from gplearn.genetic import SymbolicRegressor
+from sklearn.utils.validation import check_X_y
 import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="GP Traffic Light Optimization", layout="wide")

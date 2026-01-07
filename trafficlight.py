@@ -15,9 +15,26 @@ st.markdown("**Computational Evolution Case Study**")
 # Load Dataset
 # =========================
 data = pd.read_csv("traffic_dataset.csv")
+st.subheader("📂 Traffic Dataset")
 st.dataframe(data.head())
 
-# FORCE numeric
+# =========================
+# Encode categorical column
+# =========================
+if data["time_of_day"].dtype == object:
+    data["time_of_day"] = data["time_of_day"].map({
+        "morning": 0,
+        "afternoon": 1,
+        "evening": 2,
+        "night": 3
+    })
+
+st.write("Encoded dataset preview:")
+st.dataframe(data.head())
+
+# =========================
+# Feature & Target (FORCE NUMERIC)
+# =========================
 X = data.drop(columns=["waiting_time"]).astype(float).values
 y = data["waiting_time"].astype(float).values
 
@@ -63,48 +80,3 @@ if st.button("▶ Run GP Optimization"):
         for gen in range(generations):
             scored = [(expr, fitness(expr, X, y)) for expr in population]
             scored.sort(key=lambda x: x[1])
-
-            # selection (top 50%)
-            population = [expr for expr, _ in scored[:population_size // 2]]
-
-            # reproduction
-            while len(population) < population_size:
-                parent = random.choice(population)
-                if random.random() < mutation_rate:
-                    population.append(mutate(parent))
-                else:
-                    population.append(parent)
-
-        best_expr = min(population, key=lambda e: fitness(e, X, y))
-        best_fitness = fitness(best_expr, X, y)
-
-    st.success("✅ GP Optimization Completed")
-
-    # =========================
-    # Results
-    # =========================
-    coef, feature, bias = best_expr
-
-    st.subheader("🏆 Best GP Expression")
-    st.code(f"waiting_time = {coef:.3f} × feature[{feature}] + {bias:.3f}")
-
-    st.subheader("📊 Fitness Score (MSE)")
-    st.write(best_fitness)
-
-    y_pred = predict(best_expr, X)
-
-    st.subheader("📈 Actual vs Predicted Waiting Time")
-    st.scatter_chart(
-        pd.DataFrame({
-            "Actual Waiting Time": y,
-            "Predicted Waiting Time": y_pred
-        })
-    )
-
-    st.subheader("📌 Conclusion")
-    st.markdown(
-        "- Genetic Programming successfully evolved a predictive expression\n"
-        "- Numerical traffic features were used to minimize waiting time\n"
-        "- The evolved model is interpretable and suitable for traffic optimization"
-    )
-

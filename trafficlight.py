@@ -10,7 +10,7 @@ import time
 st.set_page_config(page_title="GP Traffic Light Optimization", layout="wide")
 
 st.title("🚦 Traffic Light Optimization using Genetic Programming (GP)")
-st.markdown("**Computational Evolution Case Study**")
+st.markdown("Computational Evolution Case Study")
 
 # =========================
 # Load Dataset
@@ -41,13 +41,6 @@ feature_names = list(data.drop(columns=["waiting_time"]).columns)
 # =========================
 # Sidebar Parameters
 # =========================
-status_col1, status_col2 = st.columns(2)
-
-with status_col1:
-    st.success("GP Optimization Completed")
-
-with status_col2:
-    st.info(f"Optimization Mode: **{optimization_mode}**")
 
 population_size = st.sidebar.slider("Population Size", 20, 100, 50)
 generations = st.sidebar.slider("Generations", 5, 100, 30)
@@ -62,8 +55,9 @@ optimization_mode = st.sidebar.radio(
 
 if optimization_mode == "Multi Objective":
     complexity_weight = st.sidebar.slider(
-        "Complexity Weight", 0.0, 1.0, 0.2,
-        help="Higher value = simpler model"
+        "Complexity Weight",
+        0.0, 1.0, 0.2,
+        help="Controls trade-off between accuracy and simplicity"
     )
 else:
     complexity_weight = 0.0
@@ -131,8 +125,21 @@ if st.button("Run Genetic Programming (GP)"):
         best_fitness = fitness(best_expr, X, y)
         y_pred = predict(best_expr, X)
 
-    exec_time = time.time() - start_time
+    exec_time = time.time() - start_time    
+    
+    #=========================
+    # Status Output (Side by Side)
+    # =========================
+    status_col1, status_col2, status_col3 = st.columns(3)
 
+    with status_col1:
+        st.success("Genetic Programming Optimization Completed")
+
+    with status_col2:
+        st.info(f"Mode: **{optimization_mode}**")
+
+    with status_col3:
+        st.metric("Execution Time (s)", f"{exec_time:.4f}")
     # =========================
     # Results
     # =========================

@@ -18,7 +18,6 @@ st.markdown("**Computational Evolution Case Study**")
 st.subheader("Traffic Dataset")
 
 data = pd.read_csv("traffic_dataset.csv")
-st.dataframe(data.head())
 
 # =========================
 # Encode categorical column (time_of_day)
@@ -53,6 +52,11 @@ mutation_rate = st.sidebar.slider("Mutation Rate", 0.01, 0.50, 0.10)
 coef_range = st.sidebar.slider("Coefficient Range (±)", 0.5, 5.0, 2.0)
 bias_range = st.sidebar.slider("Bias Range (±)", 1.0, 10.0, 5.0)
 
+feature_mode = st.sidebar.radio(
+    "Feature Usage",
+    ["Single Best Feature (Default)", "Random Feature Selection"]
+)
+
 # =========================
 # GP Helper Functions
 # =========================
@@ -67,14 +71,22 @@ def predict(expr, X):
     return coef * X[:, feature] + bias
 
 def fitness(expr, X, y):
+    coef, feature, bias = expr
     y_pred = predict(expr, X)
-    return np.mean((y - y_pred) ** 2)
+    mse = np.mean((y - y_pred) ** 2)
+    complexity_penalty = 0.01 * abs(coef)
+    return mse + complexity_penalty
 
 def mutate(expr):
     coef, feature, bias = expr
     coef += random.uniform(-0.2 * coef_range, 0.2 * coef_range)
     bias += random.uniform(-0.2 * bias_range, 0.2 * bias_range)
     return (coef, feature, bias)
+
+if feature_mode == "Single Best Feature (Default)":
+    feature = random.randint(0, n_features - 1)
+else:
+    feature = random.choice(range(n_features))
 
 # =========================
 # Run GP Optimization
@@ -157,6 +169,13 @@ if st.button("Run Genetic Programming (GP)"):
         "- The evolved model is interpretable and human-readable\n"
         "- Suitable for traffic prediction and optimization tasks"
     )
+
+    st.markdown("**Model Interpretation:**")
+st.write(
+    f"For every unit increase in **{feature_name}**, the predicted waiting time "
+    f"changes by approximately **{coef:.2f} units**, with a baseline delay of **{bias:.2f} units**."
+)
+
 
     # =========================
     # Conclusion

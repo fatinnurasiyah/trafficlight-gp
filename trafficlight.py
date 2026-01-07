@@ -15,12 +15,12 @@ st.markdown("**Computational Evolution Case Study**")
 # =========================
 # Load Dataset
 # =========================
-st.subheader("📂 Traffic Dataset")
+st.subheader("Traffic Dataset")
 
 data = pd.read_csv("traffic_dataset.csv")
 
 # =========================
-# Encode categorical column
+# Encode categorical column (time_of_day)
 # =========================
 if data["time_of_day"].dtype == object:
     data["time_of_day"] = data["time_of_day"].map({
@@ -34,19 +34,20 @@ st.markdown("**Encoded Dataset Preview (After Preprocessing):**")
 st.dataframe(data.head())
 
 # =========================
-# Features & Target
+# Feature & Target
 # =========================
 X = data.drop(columns=["waiting_time"]).astype(float).values
 y = data["waiting_time"].astype(float).values
+
 feature_names = list(data.drop(columns=["waiting_time"]).columns)
 
 # =========================
 # Sidebar Parameters
 # =========================
-st.sidebar.header("⚙️ GP Parameters")
+st.sidebar.header("Genetic Programming Parameters")
 
 population_size = st.sidebar.slider("Population Size", 20, 100, 50)
-generations = st.sidebar.slider("Generations", 5, 100, 20)
+generations = st.sidebar.slider("Generations", 5, 100, 30)
 mutation_rate = st.sidebar.slider("Mutation Rate", 0.01, 0.50, 0.10)
 coef_range = st.sidebar.slider("Coefficient Range (±)", 0.5, 5.0, 2.0)
 bias_range = st.sidebar.slider("Bias Range (±)", 1.0, 10.0, 5.0)
@@ -77,7 +78,7 @@ def mutate(expr):
 # =========================
 # Run GP Optimization
 # =========================
-st.subheader("🚦 Optimization Results (Genetic Programming)")
+st.subheader(" Genetic Programming Optimization Results")
 
 if st.button("Run Genetic Programming (GP)"):
 
@@ -111,19 +112,16 @@ if st.button("Run Genetic Programming (GP)"):
 
     exec_time = time.time() - start_time
 
-    coef, feature, bias = best_expr
-    feature_name = feature_names[feature]
-    y_pred = predict(best_expr, X)
-
-    st.success(" Optimization Completed")
+    st.success("GP Optimization Completed")
 
     # =========================
     # Best Model
     # =========================
-    st.markdown("###  Best Interpretable Mathematical Model")
-    st.code(
-        f"waiting_time = {coef:.3f} × {feature_name} + {bias:.3f}"
-    )
+    coef, feature, bias = best_expr
+    feature_name = feature_names[feature]
+
+    st.subheader("Best Interpretable Mathematical Model")
+    st.code(f"waiting_time = {coef:.3f} × {feature_name} + {bias:.3f}")
 
     st.write(f"📉 **Best Fitness (MSE):** {best_fitness:.4f}")
     st.write(f"⏱ **Execution Time:** {exec_time:.4f} seconds")
@@ -131,33 +129,38 @@ if st.button("Run Genetic Programming (GP)"):
     # =========================
     # Convergence Graph
     # =========================
-    st.subheader("📈 Convergence Behaviour")
+    st.subheader("📈 Convergence Behaviour (Fitness vs Generation)")
     st.line_chart(
-        pd.DataFrame(
-            {"Best Fitness (MSE)": fitness_history}
-        )
+        pd.DataFrame({"Best Fitness (MSE)": fitness_history})
     )
 
     # =========================
-    # Actual vs Predicted
+    # Prediction & Residual Analysis
     # =========================
-    st.subheader("📊 Actual vs Predicted Waiting Time")
-    st.scatter_chart(
-        pd.DataFrame({
-            "Actual Waiting Time": y,
-            "Predicted Waiting Time": y_pred
-        })
-    )
+    y_pred = predict(best_expr, X)
+
+    st.subheader("📊 Residual Analysis")
+    residuals = y - y_pred
+
+    residual_df = pd.DataFrame({
+        "Predicted Waiting Time": y_pred,
+        "Residual Error": residuals
+    })
+
+    st.scatter_chart(residual_df)
 
     # =========================
     # Performance Analysis
     # =========================
-    st.subheader("Performance Analysis")
+    st.subheader(" Performance Analysis")
     st.markdown(
-        "- **Convergence Rate:** Rapid fitness improvement during early generations\n"
-        "- **Accuracy:** GP-generated equation predicts waiting time effectively\n"
-        "- **Interpretability:** Simple linear expression is human-readable\n"
-        "- **Efficiency:** Low computation time due to symbolic regression"
+        "- **Convergence Rate:** Rapid improvement during early generations\n"
+        "- **Accuracy:** GP-generated model predicts waiting time with acceptable error\n"
+        "- **Interpretability:** Simple mathematical expression enables insight\n\n"
+        "**Observations:**\n"
+        "- Fitness stabilizes after sufficient generations\n"
+        "- GP favors dominant traffic features\n"
+        "- Model is transparent and explainable"
     )
 
     # =========================
@@ -166,7 +169,8 @@ if st.button("Run Genetic Programming (GP)"):
     st.subheader("Conclusion")
     st.markdown(
         "This Streamlit-based Genetic Programming system demonstrates how evolutionary computation "
-        "can automatically generate an interpretable mathematical model for predicting traffic "
-        "waiting time using traffic dataset attributes."
+        "can automatically generate interpretable mathematical models to predict traffic waiting time. "
+        "Unlike Genetic Algorithms that directly optimize signal timings, GP focuses on discovering "
+        "transparent relationships between traffic variables and congestion."
     )
 

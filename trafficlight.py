@@ -10,7 +10,7 @@ import time
 st.set_page_config(page_title="GP Traffic Light Optimization", layout="wide")
 
 st.title("🚦 Traffic Light Optimization using Genetic Programming (GP)")
-st.markdown("Computational Evolution Case Study")
+st.markdown("JIE 42903 - Evolutionary Computing (Lab Report and Project ")
 
 # =========================
 # Load Dataset

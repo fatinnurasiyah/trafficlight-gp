@@ -22,10 +22,10 @@ data = pd.read_csv("traffic_dataset.csv")
 # Encode categorical column
 if data["time_of_day"].dtype == object:
     data["time_of_day"] = data["time_of_day"].map({
-        "morning": 0,
-        "afternoon": 1,
-        "evening": 2,
-        "night": 3
+        "morning": 1,
+        "afternoon": 2,
+        "evening": 3,
+        "night": 4
     })
 
 st.markdown("Encoded Dataset Preview: after preprocessing")
